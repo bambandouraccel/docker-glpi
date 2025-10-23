@@ -1,6 +1,6 @@
 FROM debian:12.5
 
-LABEL org.opencontainers.image.authors="github@diouxx.be"
+LABEL org.opencontainers.image.authors="ndourbamba18@gmail.com"
 
 ENV DEBIAN_FRONTEND=noninteractive \
     TIMEZONE=Africa/Dakar
