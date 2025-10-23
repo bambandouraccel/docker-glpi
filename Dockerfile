@@ -38,7 +38,7 @@ RUN apt update \
 
 # Télécharger et installer GLPI pendant le build
 #RUN wget -q https://github.com/glpi-project/glpi/releases/download/10.0.20/glpi-10.0.20.tg -O /tmp/glpi.tgz \
-RUN wget -q https://github.com/glpi-project/glpi/releases/download/11.0.0/glpi-11.0.0.tgz -O /tmp/glpi.tgz \
+RUN wget -q https://github.com/glpi-project/glpi/releases/download/11.0.1/glpi-11.0.1.tgz -O /tmp/glpi.tgz \
  && tar -xzf /tmp/glpi.tgz -C /var/www/html/ \
  && rm /tmp/glpi.tgz \
  && mv /var/www/html/glpi /var/www/html/glpi-original \
