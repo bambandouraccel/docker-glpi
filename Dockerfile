@@ -47,19 +47,23 @@ RUN wget -q https://github.com/glpi-project/glpi/releases/download/11.0.1/glpi-1
  && rm -rf /var/www/html/glpi-original \
  && chown -R 1001:0 /var/www/html/glpi
 
-# Configurer Apache pour servir GLPI depuis la racine
+# Configurer Apache pour servir GLPI 11 depuis /public
 RUN sed -i 's/Listen 80/Listen 8080/' /etc/apache2/ports.conf \
- && sed -i 's|DocumentRoot /var/www/html|DocumentRoot /var/www/html/glpi|' /etc/apache2/sites-available/000-default.conf \
- && sed -i 's|:80>|:8080>|' /etc/apache2/sites-available/000-default.conf \
- && echo "ServerName localhost" >> /etc/apache2/apache2.conf \
- && echo "<Directory /var/www/html/glpi>" >> /etc/apache2/apache2.conf \
- && echo "    Options FollowSymlinks" >> /etc/apache2/apache2.conf \
- && echo "    AllowOverride All" >> /etc/apache2/apache2.conf \
- && echo "    Require all granted" >> /etc/apache2/apache2.conf \
- && echo "</Directory>" >> /etc/apache2/apache2.conf \
+ && echo "<VirtualHost *:8080>" > /etc/apache2/sites-available/000-default.conf \
+ && echo "    DocumentRoot /var/www/html/glpi/public" >> /etc/apache2/sites-available/000-default.conf \
+ && echo "    <Directory /var/www/html/glpi/public>" >> /etc/apache2/sites-available/000-default.conf \
+ && echo "        Require all granted" >> /etc/apache2/sites-available/000-default.conf \
+ && echo "        AllowOverride All" >> /etc/apache2/sites-available/000-default.conf \
+ && echo "        Options FollowSymlinks" >> /etc/apache2/sites-available/000-default.conf \
+ && echo "        RewriteEngine On" >> /etc/apache2/sites-available/000-default.conf \
+ && echo "        RewriteCond %{REQUEST_FILENAME} !-f" >> /etc/apache2/sites-available/000-default.conf \
+ && echo "        RewriteRule ^(.*)$ index.php [QSA,L]" >> /etc/apache2/sites-available/000-default.conf \
+ && echo "    </Directory>" >> /etc/apache2/sites-available/000-default.conf \
+ && echo "</VirtualHost>" >> /etc/apache2/sites-available/000-default.conf \
  && a2enmod rewrite \
  && chown -R 1001:0 /etc/apache2 /etc/php /var/log/apache2 /var/run/apache2 /var/www/html \
  && chmod -R g+rwX /var/www/html /etc/apache2 /etc/php /var/log/apache2 /var/run/apache2
+
 
 # Créer un fichier index.php redirigeant vers GLPI
 RUN echo "<?php header('Location: /glpi/'); ?>" > /var/www/html/index.php
