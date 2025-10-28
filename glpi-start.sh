@@ -1,44 +1,38 @@
 #!/bin/bash
+set -e
 
-# Configuration timezone
+# --- Configuration du timezone PHP ---
 if [[ -n "${TIMEZONE}" ]]; then
-    echo "date.timezone = \"$TIMEZONE\"" > /etc/php/8.3/apache2/conf.d/timezone.ini
-    echo "date.timezone = \"$TIMEZONE\"" > /etc/php/8.3/cli/conf.d/timezone.ini
+  echo "date.timezone = \"$TIMEZONE\"" > /etc/php/8.3/apache2/conf.d/timezone.ini
+  echo "date.timezone = \"$TIMEZONE\"" > /etc/php/8.3/cli/conf.d/timezone.ini
 fi
 
-# Enable session.cookie_httponly
-sed -i 's/session.cookie_httponly =.*/session.cookie_httponly = on/' /etc/php/8.3/apache2/php.ini
+# --- Correction sécurité session ---
+sed -i 's,session.cookie_httponly = *\(on\|off\|true\|false\|0\|1\)\?,session.cookie_httponly = on,gi' /etc/php/8.3/apache2/php.ini
 
-# Configuration LDAP
-if ! grep -q "TLS_REQCERT" /etc/ldap/ldap.conf; then
-    echo "TLS_REQCERT never" >> /etc/ldap/ldap.conf
+# --- Vérification TLS_REQCERT ---5
+if ! grep -q "TLS_REQCERT" /etc/ldap/ldap.conf 2>/dev/null; then
+  echo "TLS_REQCERT\tnever" >> /etc/ldap/ldap.conf
 fi
 
-# Vérification de l'installation GLPI
-FOLDER_GLPI="glpi/"
-FOLDER_WEB="/var/www/html/"
+# --- Initialisation des répertoires persistants ---
+PERSIST_DIRS=(files config plugins marketplace)
 
-if [ ! "$(ls ${FOLDER_WEB}${FOLDER_GLPI}/bin)" ]; then
-    echo "Installing GLPI..."
-    SRC_GLPI=$(curl -s https://api.github.com/repos/glpi-project/glpi/releases/tags/11.0.0 | jq -r '.assets[0].browser_download_url')
-    TAR_GLPI=$(basename ${SRC_GLPI})
-    
-    wget -P ${FOLDER_WEB} ${SRC_GLPI}
-    tar -xzf ${FOLDER_WEB}${TAR_GLPI} -C ${FOLDER_WEB}
-    rm -f ${FOLDER_WEB}${TAR_GLPI}
-fi
+for dir in "${PERSIST_DIRS[@]}"; do
+  TARGET="/var/www/html/glpi/${dir}"
+  if [ ! -d "$TARGET" ] || [ -z "$(ls -A "$TARGET" 2>/dev/null)" ]; then
+    echo "Initializing persistent directory: $TARGET"
+    mkdir -p "$TARGET"
+    cp -r "/var/www/html/glpi-original/${dir}/." "$TARGET" 2>/dev/null || true
+  fi
+  chown -R 1001:0 "$TARGET"
+  chmod -R g+rwX "$TARGET"
+done
 
-# Configuration des permissions
-chown -R 1001:0 ${FOLDER_WEB}${FOLDER_GLPI}
-chmod -R g+rwX ${FOLDER_WEB}${FOLDER_GLPI}
-
-# Configuration cron pour GLPI 11.0.0
-echo "*/2 * * * * /usr/bin/php /var/www/html/glpi/front/cron.php &>/dev/null" > /etc/cron.d/glpi
-chmod 0644 /etc/cron.d/glpi
-
-# Démarrage des services
+# --- Création tâche cron GLPI ---
+echo "*/2 * * * * www-data /usr/bin/php /var/www/html/glpi/front/cron.php &>/dev/null" > /etc/cron.d/glpi
 service cron start
-a2enmod rewrite
 
-# Lancement d'Apache
-/usr/sbin/apache2ctl -D FOREGROUND
+# --- Démarrage Apache ---
+echo "Starting Apache..."
+exec /usr/sbin/apache2ctl -D FOREGROUND
