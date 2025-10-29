@@ -38,23 +38,14 @@ RUN apt update \
 
 # Télécharger et installer GLPI pendant le build
 #RUN wget -q https://github.com/glpi-project/glpi/releases/download/10.0.20/glpi-10.0.20.tg -O /tmp/glpi.tgz \
-#RUN wget -q https://github.com/glpi-project/glpi/releases/download/11.0.1/glpi-11.0.1.tgz -O /tmp/glpi.tgz \
-#RUN wget -q https://github.com/bambandouraccel/glpi/archive/refs/heads/glpi-v11.0.1.tar.gz -O /tmp/glpi.tgz \
-# && tar -xzf /tmp/glpi.tgz -C /var/www/html/ \
-# && rm /tmp/glpi.tgz \
-# && mv /var/www/html/glpi /var/www/html/glpi-original \
-# && mkdir -p /var/www/html/glpi \
-# && cp -r /var/www/html/glpi-original/* /var/www/html/glpi/ \
-# && rm -rf /var/www/html/glpi-original \
-# && chown -R 1001:0 /var/www/html/glpi
-
-RUN set -ex && \
-    wget -q https://github.com/bambandouraccel/glpi/archive/refs/heads/glpi-v11.0.1.tar.gz -O /tmp/glpi-glpi-v11.0.1.tgz && \
-    mkdir -p /var/www/html && \
-    tar -xzf /tmp/glpi-glpi-v11.0.1.tgz -C /var/www/html && \
-    rm /tmp/glpi-glpi-v11.0.1.tgz && \
-    mv /var/www/html/glpi-glpi-v11.0.1 /var/www/html/glpi && \
-    chown -R 1001:0 /var/www/html/glpi
+RUN wget -q https://github.com/glpi-project/glpi/releases/download/11.0.1/glpi-11.0.1.tgz -O /tmp/glpi.tgz \
+ && tar -xzf /tmp/glpi.tgz -C /var/www/html/ \
+ && rm /tmp/glpi.tgz \
+ && mv /var/www/html/glpi /var/www/html/glpi-original \
+ && mkdir -p /var/www/html/glpi \
+ && cp -r /var/www/html/glpi-original/* /var/www/html/glpi/ \
+ && rm -rf /var/www/html/glpi-original \
+ && chown -R 1001:0 /var/www/html/glpi
 
 # Configurer Apache pour servir GLPI 11 depuis /public
 RUN sed -i 's/Listen 80/Listen 8080/' /etc/apache2/ports.conf \
