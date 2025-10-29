@@ -49,7 +49,6 @@ RUN git clone --branch glpi-v11.0.1 --depth=1 https://github.com/bambandouraccel
  && composer install --no-dev --optimize-autoloader --no-interaction \
  && chown -R 1001:0 /var/www/html/glpi
 
-
 # ==============================
 # 3️⃣ Configuration Apache pour GLPI
 # ==============================
