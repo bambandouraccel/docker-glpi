@@ -6,7 +6,7 @@ ENV DEBIAN_FRONTEND=noninteractive \
     TIMEZONE=Africa/Dakar
 
 RUN apt update \
- && apt install --yes ca-certificates apt-transport-https lsb-release wget curl \
+ && apt install --yes ca-certificates apt-transport-https lsb-release wget curl git \
  && curl -sSLo /usr/share/keyrings/deb.sury.org-php.gpg https://packages.sury.org/php/apt.gpg \
  && sh -c 'echo "deb [signed-by=/usr/share/keyrings/deb.sury.org-php.gpg] https://packages.sury.org/php/ $(lsb_release -sc) main" > /etc/apt/sources.list.d/php.list' \
  && apt update \
@@ -36,15 +36,8 @@ RUN apt update \
     libsasl2-modules-db \
  && rm -rf /var/lib/apt/lists/*
 
-# Télécharger et installer GLPI pendant le build
-#RUN wget -q https://github.com/glpi-project/glpi/releases/download/10.0.20/glpi-10.0.20.tg -O /tmp/glpi.tgz \
-RUN wget -q https://github.com/glpi-project/glpi/releases/download/11.0.1/glpi-11.0.1.tgz -O /tmp/glpi.tgz \
- && tar -xzf /tmp/glpi.tgz -C /var/www/html/ \
- && rm /tmp/glpi.tgz \
- && mv /var/www/html/glpi /var/www/html/glpi-original \
- && mkdir -p /var/www/html/glpi \
- && cp -r /var/www/html/glpi-original/* /var/www/html/glpi/ \
- && rm -rf /var/www/html/glpi-original \
+# ✅ Cloner GLPI depuis ton dépôt GitHub (branche glpi-v11.0.1)
+RUN git clone --branch glpi-v11.0.1 --depth=1 https://github.com/bambandouraccel/glpi.git /var/www/html/glpi \
  && chown -R 1001:0 /var/www/html/glpi
 
 # Configurer Apache pour servir GLPI 11 depuis /public
@@ -63,7 +56,6 @@ RUN sed -i 's/Listen 80/Listen 8080/' /etc/apache2/ports.conf \
  && a2enmod rewrite \
  && chown -R 1001:0 /etc/apache2 /etc/php /var/log/apache2 /var/run/apache2 /var/www/html \
  && chmod -R g+rwX /var/www/html /etc/apache2 /etc/php /var/log/apache2 /var/run/apache2
-
 
 # Créer un fichier index.php redirigeant vers GLPI
 RUN echo "<?php header('Location: /glpi/'); ?>" > /var/www/html/index.php
