@@ -47,8 +47,8 @@ RUN apt update \
 RUN git clone --branch glpi-v11.0.1 --depth=1 https://github.com/bambandouraccel/glpi.git /var/www/html/glpi \
  && cd /var/www/html/glpi \
  && composer install --no-dev --optimize-autoloader --no-interaction \
- && php bin/console dependencies install --no-interaction \
  && chown -R 1001:0 /var/www/html/glpi
+
 
 # ==============================
 # 3️⃣ Configuration Apache pour GLPI
